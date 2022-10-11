@@ -1,75 +1,35 @@
-pipeline{
+node{
+    
+    echo "Branch name: ${env.BRANCH_NAME}"
+	echo "Job Name: ${env.JOB_NAME}"
+	echo "Build number: ${BUILD_NUMBER}"
+	echo "Job url: ${JOB_URL}"
+    
+    properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
 
-agent any
+    def mavenHome = tool name: 'maven3.8.6'
 
-tools{
-maven 'maven3.8.2'
-
-}
-
-triggers{
-pollSCM('* * * * *')
-}
-
-options{
-timestamps()
-buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5'))
-}
-
-stages{
-
-  stage('CheckOutCode'){
-    steps{
-    git branch: 'development', credentialsId: '957b543e-6f77-4cef-9aec-82e9b0230975', url: 'https://github.com/devopstrainingblr/maven-web-application-1.git'
+    stage('git_checkout_code'){
+    git branch: 'dev', credentialsId: 'e0162146-458b-46fc-b154-d4bc60ecd3c6', url: 'https://github.com/mahesh-ghe/maven-web-application.git'
+    }
+    
+    stage('build'){
+    sh "${mavenHome}/bin/mvn clean package"
+    }
+    
+    stage('sonar_report'){
+    sh "${mavenHome}/bin/mvn clean sonar:sonar"
+    }
 	
+	stage('deploy_artifacts'){
+    sh "${mavenHome}/bin/mvn clean deploy"
+    }
+    
+    stage('deploy_to_tomcat'){
+	sshagent(['4e603ae0-8e40-4518-a740-0621de9768a2']) {
+		sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.32.189:/opt/apache-tomcat-9.0.65/webapps"
 	}
-  }
-  
-  stage('Build'){
-  steps{
-  sh  "mvn clean package"
-  }
-  }
-/*
- stage('ExecuteSonarQubeReport'){
-  steps{
-  sh  "mvn clean sonar:sonar"
-  }
-  }
-  
-  stage('UploadArtifactsIntoNexus'){
-  steps{
-  sh  "mvn clean deploy"
-  }
-  }
-  
-  stage('DeployAppIntoTomcat'){
-  steps{
-  sshagent(['bfe1b3c1-c29b-4a4d-b97a-c068b7748cd0']) {
-   sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@35.154.190.162:/opt/apache-tomcat-9.0.50/webapps/"    
-  }
-  }
-  }
-  */
-}//Stages Closing
+	}
 
-post{
 
- success{
- emailext to: 'devopstrainingblr@gmail.com,mithuntechnologies@yahoo.com',
-          subject: "Pipeline Build is over .. Build # is ..${env.BUILD_NUMBER} and Build status is.. ${currentBuild.result}.",
-          body: "Pipeline Build is over .. Build # is ..${env.BUILD_NUMBER} and Build status is.. ${currentBuild.result}.",
-          replyTo: 'devopstrainingblr@gmail.com'
- }
- 
- failure{
- emailext to: 'devopstrainingblr@gmail.com,mithuntechnologies@yahoo.com',
-          subject: "Pipeline Build is over .. Build # is ..${env.BUILD_NUMBER} and Build status is.. ${currentBuild.result}.",
-          body: "Pipeline Build is over .. Build # is ..${env.BUILD_NUMBER} and Build status is.. ${currentBuild.result}.",
-          replyTo: 'devopstrainingblr@gmail.com'
- }
- 
 }
-
-
-}//Pipeline closing
