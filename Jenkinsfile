@@ -17,6 +17,7 @@ node {
 	stage('build'){
 	sh "${mavenHome}/bin/mvn clean package"
 	}
+	/*
 	stage('sonar_report'){
 	sh "${mavenHome}/bin/mvn clean sonar:sonar"
 	}
@@ -28,7 +29,7 @@ node {
 		sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.32.189:/opt/apache-tomcat-9.0.65/webapps"
 	}
 	}
-
+	*/
     } 
 	catch (e) {
 		// If there was an exception thrown, the build failed
