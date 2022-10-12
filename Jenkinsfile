@@ -57,13 +57,13 @@ def notifyBuild(String buildStatus = 'STARTED') {
     color = 'YELLOW'
     colorCode = '#FFFF00'
   } else if (buildStatus == 'SUCCESSFUL') {
-    color = 'GREEN'
-    colorCode = '#00FF00'
+    color = 'BLUE'
+    colorCode = '#0093af'
   } else {
     color = 'RED'
     colorCode = '#FF0000'
   }
 
   // Send notifications
-  slackSend (color: colorCode, message: summary)
+  slackSend (color: colorCode, message: summary, channel: #pipeline_project)
 }
