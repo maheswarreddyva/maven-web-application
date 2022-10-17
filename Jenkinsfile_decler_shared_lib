@@ -7,9 +7,9 @@ pipeline{
 		maven 'maven3.8.6'
 	}
 		
-	/*triggers {
+	triggers {
 		pollSCM '* * * * *'
-	}*/
+	}
 	
 	options {
 		buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')
