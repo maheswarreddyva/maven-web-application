@@ -1,0 +1,68 @@
+@Library('slacklib')
+
+pipeline{
+	agent {
+		node 'nodes'
+	}
+	
+	tools {
+		maven 'maven3.8.6'
+	}
+		
+	triggers {
+		pollSCM '* * * * *'
+	}
+	
+	options {
+		buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')
+	}
+	
+	stages{
+		stage('checkout_code'){
+			steps{
+				slacknotifications('STARTED')
+				git branch: 'dev', credentialsId: 'e0162146-458b-46fc-b154-d4bc60ecd3c6', url: 'https://github.com/mahesh-ghe/maven-web-application.git'
+			}
+		}
+	
+		stage('build'){
+			steps{
+				sh 'mvn clean package'
+			}
+		}
+	
+		stage('SonarQube_report'){
+			steps{
+				sh 'mvn sonar:sonar'
+			}
+		}
+	
+		stage('deploy_artifacts_into_nexus_repo'){
+			steps{
+				sh 'mvn clean deploy'
+			}
+		}
+		stage('Deply_app_to_tomcat'){
+			steps{
+				sshagent(['4e603ae0-8e40-4518-a740-0621de9768a2']){
+					sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.32.189:/opt/apache-tomcat-9.0.65/webapps"
+				}
+			}
+		}
+	}
+	
+	post {
+		aborted {
+			slacknotifications(currentBuild.result)
+		}
+		success {
+			slacknotifications(currentBuild.result)
+		}
+		failure {
+			slacknotifications(currentBuild.result)
+		}
+	}
+
+	
+	
+}
