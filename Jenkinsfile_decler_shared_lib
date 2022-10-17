@@ -1,9 +1,7 @@
 @Library('slacklib')
 
 pipeline{
-	agent {
-		node 'nodes'
-	}
+	agent any
 	
 	tools {
 		maven 'maven3.8.6'
