@@ -1,4 +1,4 @@
-node('walmart_node') {
+node{
     try {
         notifyBuild('STARTED')
 
